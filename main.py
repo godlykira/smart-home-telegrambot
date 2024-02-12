@@ -1,10 +1,12 @@
 import os
+from unicodedata import category
 from dotenv import load_dotenv
 import logging
-from telegram import ForceReply, Update
-from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
+from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove, ForceReply, Update
+from telegram.ext import Application, CommandHandler, ContextTypes, ConversationHandler, MessageHandler, filters
 
-import test_controller
+import controllers.test_controller as test_controller
+import controllers.db_controller as db_controller
 
 load_dotenv()
 
@@ -25,9 +27,14 @@ logger = logging.getLogger(__name__)
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Send a message when the command /start is issued."""
     user = update.effective_user
+    logger.info("User %s started the conversation.", user.first_name)
+
+    # Add user to database
+    db_controller.create_user_db(update.effective_message.chat_id)
+
     await update.message.reply_html(
         rf"Hi {user.mention_html()}!",
-        reply_markup=ForceReply(selective=True),
+        # reply_markup=ForceReply(selective=True),
     )
 
 
@@ -35,7 +42,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     """Send a message when the command /help is issued."""
     await update.message.reply_text('''/list - list all appliances
                                     
-/add - add new appliance. Usage: /add <applianceName> <category>
+/addappliance - add new appliance.
     
 -- turn on/off appliances --
 
@@ -134,6 +141,71 @@ async def unset_intruder_alert(update: Update, context: ContextTypes.DEFAULT_TYP
     text = "Intruder alert disabled!" if job_removed else "You have no active intruder alert."
     await update.message.reply_text(text)
 
+# add appliance
+APPLIANCE_CATEGORY, APPLIANCE_NAME = range(2)
+
+def get_categories() -> int:
+    """
+    Function to retrieve categories from the database and generate a regex pattern.
+    Returns a dictionary containing the categories and the generated regex pattern.
+    """
+    categories = db_controller.get_categories()['categories']
+    regex = ''
+    for x in categories[0]:
+        regex += x + '|'
+    regex = regex[:-1]
+
+    return {
+        'categories': categories,
+        'regex': regex
+    }
+
+async def start_add_appliance(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    reply_keyboard = get_categories()['categories']
+
+    await update.message.reply_text(
+        "Hi! I'm Smart Home. I can help you add appliances. "
+        "Send /cancel to stop talking to me.\n\n"
+        "Select your appliance category:",
+        reply_markup=ReplyKeyboardMarkup(
+            reply_keyboard, one_time_keyboard=True, input_field_placeholder="appliance category"
+        ),
+    )
+
+    return APPLIANCE_CATEGORY
+
+
+async def appliance_category(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Stores the selected gender and asks for a photo."""
+    user = update.message.from_user
+    logger.info("Appliance category of %s: %s", user.first_name, update.message.text)
+    await update.message.reply_text(
+        "so I know what your appliance is. Now give a name to your appliance: ",
+        reply_markup=ReplyKeyboardRemove(),
+    )
+
+    return APPLIANCE_NAME
+
+async def appliance_name(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Stores the photo and asks for a location."""
+    user = update.message.from_user
+    logger.info("Appliance name of %s: %s", user.first_name, update.message.text)
+    await update.message.reply_text(
+        "Thanks! I will remember this."
+    )
+
+    return ConversationHandler.END
+
+async def cancel_add_appliance(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Cancels and ends the conversation."""
+    user = update.message.from_user
+    logger.info("User %s canceled the add appliance", user.first_name)
+    await update.message.reply_text(
+        "Bye! I hope we can talk again some day.", reply_markup=ReplyKeyboardRemove()
+    )
+
+    return ConversationHandler.END
+
 def main() -> None:
     """Start the bot."""
     # Create the Application and pass it your bot's token.
@@ -148,6 +220,16 @@ def main() -> None:
 
     application.add_handler(CommandHandler("intruderalert", set_intruder_alert))
     application.add_handler(CommandHandler('stopintruderalert', unset_intruder_alert))
+
+    conv_addAppliance = ConversationHandler(
+        entry_points=[CommandHandler('addappliance', start_add_appliance)],
+        states={
+            APPLIANCE_CATEGORY: [MessageHandler(filters.Regex(f"^({get_categories()['regex']})$"), appliance_category)],
+            APPLIANCE_NAME: [MessageHandler(filters.TEXT, appliance_name)],
+        },
+        fallbacks=[CommandHandler("cancel", cancel_add_appliance)],
+    )
+    application.add_handler(conv_addAppliance)
 
     # on non command i.e message - echo the message on Telegram
     # application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
