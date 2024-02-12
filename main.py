@@ -1,5 +1,4 @@
 import os
-from unicodedata import category
 from dotenv import load_dotenv
 import logging
 from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove, ForceReply, Update
@@ -83,6 +82,7 @@ def remove_job_if_exists(name: str, context: ContextTypes.DEFAULT_TYPE) -> bool:
         job.schedule_removal()
     return True
 
+
 # automoisture
 async def automoisture_callback(context: ContextTypes.DEFAULT_TYPE) -> None:
     """Send the alarm message."""
@@ -110,6 +110,7 @@ async def unset_automoisture(update: Update, context: ContextTypes.DEFAULT_TYPE)
     job_removed = remove_job_if_exists(str(chat_id), context)
     text = "Auto moisture monitoring successfully cancelled!" if job_removed else "You have no active automoisture."
     await update.message.reply_text(text)
+
 
 # intruder alert
 async def intruder_alert_callback(context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -140,6 +141,7 @@ async def unset_intruder_alert(update: Update, context: ContextTypes.DEFAULT_TYP
     job_removed = remove_job_if_exists(str(chat_id), context)
     text = "Intruder alert disabled!" if job_removed else "You have no active intruder alert."
     await update.message.reply_text(text)
+
 
 # add appliance
 APPLIANCE_CATEGORY, APPLIANCE_NAME = range(2)
@@ -174,11 +176,14 @@ async def start_add_appliance(update: Update, context: ContextTypes.DEFAULT_TYPE
 
     return APPLIANCE_CATEGORY
 
-
 async def appliance_category(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Stores the selected gender and asks for a photo."""
     user = update.message.from_user
     logger.info("Appliance category of %s: %s", user.first_name, update.message.text)
+
+    # add to temp
+    db_controller.add_to_temp(update.effective_message.chat_id, update.message.text)
+
     await update.message.reply_text(
         "so I know what your appliance is. Now give a name to your appliance: ",
         reply_markup=ReplyKeyboardRemove(),
@@ -190,6 +195,13 @@ async def appliance_name(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     """Stores the photo and asks for a location."""
     user = update.message.from_user
     logger.info("Appliance name of %s: %s", user.first_name, update.message.text)
+
+    # add to temp
+    db_controller.add_to_temp(update.effective_message.chat_id, update.message.text)
+
+    # save to db
+    db_controller.add_appliance(update.effective_message.chat_id)
+
     await update.message.reply_text(
         "Thanks! I will remember this."
     )
