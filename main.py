@@ -10,6 +10,7 @@ from handlers._moisture import set_automoisture, unset_automoisture
 from handlers._intruder_alert import set_intruder_alert, unset_intruder_alert
 from handlers._add_appliance import get_categories, start_add_appliance, appliance_category, appliance_name, cancel_add_appliance, APPLIANCE_CATEGORY, APPLIANCE_NAME
 from handlers._rm_appliance import start_remove_appliance, remove_appliance, APPLIANCE_NAME_REMOVE
+from handlers._use_appliance import start_use_appliance, use_appliance, APPLIANCE_NAME_USE
 
 load_dotenv()
 
@@ -112,9 +113,14 @@ def main() -> None:
     )
     application.add_handler(conv_removeAppliance)
 
-    # conv_useAppliance = ConversationHandler(
-    #     entry_points=[CommandHandler('useappliance', start_use_appliance)],
-    # )
+    conv_useAppliance = ConversationHandler(
+        entry_points=[CommandHandler('useappliance', start_use_appliance)],
+        states={
+            APPLIANCE_NAME_USE: [MessageHandler(filters.TEXT, use_appliance)],
+        },
+        fallbacks=[],
+    )
+    application.add_handler(conv_useAppliance)
 
     # on non command i.e message - echo the message on Telegram
     # application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
