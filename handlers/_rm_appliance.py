@@ -17,13 +17,19 @@ APPLIANCE_NAME_REMOVE = range(1)
 
 async def start_remove_appliance(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_appliance = db_controller.get_all_appliance(update.effective_message.chat_id)
+
+    if len(user_appliance) == 0:
+        await update.message.reply_text(
+            "No appliance found. Please add an appliance first."
+        )
+        return ConversationHandler.END
+
     appliance_name = ''
     for x in user_appliance:
         appliance_name += f'{user_appliance.index(x) + 1}. ' + x['name'] + '\n'
 
     await update.message.reply_text(
         "Which appliance do you want to remove?"
-        "Send /cancel to stop talking to me.\n"
         "Usage: <appliance no.>\n\n"
         f"{appliance_name}"
     )
@@ -38,8 +44,14 @@ async def remove_appliance(update: Update, context: ContextTypes.DEFAULT_TYPE) -
         if int(update.message.text) - 1 < len(db_controller.get_all_appliance(update.effective_message.chat_id)):
             db_controller.remove_appliance(update.effective_message.chat_id, update.message.text)
 
+            user_appliance = db_controller.get_all_appliance(update.effective_message.chat_id)
+            appliance_name = ''
+            for x in user_appliance:
+                appliance_name += f'{user_appliance.index(x) + 1}. ' + x['name'] + '\n'
+
             await update.message.reply_text(
-                "Appliance removed!"
+                "Appliance removed!\n\n"
+                f"{appliance_name}"
             )
         else: 
             await update.message.reply_text(
