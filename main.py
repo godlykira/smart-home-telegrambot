@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
 import logging
-from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove, ForceReply, Update
+from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove, Update
 from telegram.ext import Application, CommandHandler, ContextTypes, ConversationHandler, MessageHandler, filters
 
 import controllers.test_controller as test_controller
@@ -42,6 +42,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     await update.message.reply_text('''/list - list all appliances
                                     
 /addappliance - add new appliance.
+/removeappliance - remove appliance.
     
 -- turn on/off appliances --
 
@@ -218,6 +219,44 @@ async def cancel_add_appliance(update: Update, context: ContextTypes.DEFAULT_TYP
 
     return ConversationHandler.END
 
+
+# remove appliance
+APPLIANCE_NAME_REMOVE = range(1)
+
+async def start_remove_appliance(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    user_appliance = db_controller.get_all_appliance(update.effective_message.chat_id)
+    appliance_name = ''
+    for x in user_appliance:
+        appliance_name += f'{user_appliance.index(x) + 1}. ' + x['name'] + '\n'
+
+    await update.message.reply_text(
+        "Which appliance do you want to remove?"
+        "Send /cancel to stop talking to me.\n"
+        "Usage: <appliance no.>\n\n"
+        f"{appliance_name}"
+    )
+
+    return APPLIANCE_NAME_REMOVE
+
+async def remove_appliance(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None: 
+    user = update.message.from_user
+    logger.info("User %s: %s", user.first_name, update.message.text)
+
+    if (update.message.text.isdigit()):
+        if int(update.message.text) - 1 < len(db_controller.get_all_appliance(update.effective_message.chat_id)):
+            db_controller.remove_appliance(update.effective_message.chat_id, update.message.text)
+
+            await update.message.reply_text(
+                "Appliance removed!"
+            )
+        else: 
+            await update.message.reply_text(
+                "Appliance not found."
+            )
+        # db_controller.remove_appliance(update.effective_message.chat_id, update.message.text)
+
+    return ConversationHandler.END
+    
 def main() -> None:
     """Start the bot."""
     # Create the Application and pass it your bot's token.
@@ -242,6 +281,15 @@ def main() -> None:
         fallbacks=[CommandHandler("cancel", cancel_add_appliance)],
     )
     application.add_handler(conv_addAppliance)
+
+    conv_removeAppliance = ConversationHandler(
+        entry_points=[CommandHandler('removeappliance', start_remove_appliance)],
+        states={
+            APPLIANCE_NAME_REMOVE: [MessageHandler(filters.TEXT, remove_appliance)],
+        },
+        fallbacks=[],
+    )
+    application.add_handler(conv_removeAppliance)
 
     # on non command i.e message - echo the message on Telegram
     # application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
