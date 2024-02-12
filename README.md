@@ -13,3 +13,7 @@ To install all the requirement packages, run this command;
 ```powershell
 pip install -r requirements.txt
 ```
+After installation, run `main.py`
+```powershell
+python main.py
+```
