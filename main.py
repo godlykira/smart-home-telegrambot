@@ -76,6 +76,7 @@ def remove_job_if_exists(name: str, context: ContextTypes.DEFAULT_TYPE) -> bool:
         job.schedule_removal()
     return True
 
+# automoisture
 async def automoisture_callback(context: ContextTypes.DEFAULT_TYPE) -> None:
     """Send the alarm message."""
     job = context.job
@@ -103,6 +104,35 @@ async def unset_automoisture(update: Update, context: ContextTypes.DEFAULT_TYPE)
     text = "Auto moisture monitoring successfully cancelled!" if job_removed else "You have no active automoisture."
     await update.message.reply_text(text)
 
+# intruder alert
+async def intruder_alert_callback(context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Send the alarm message."""
+    job = context.job
+    if job.data == "Object in way":
+        await context.bot.send_message(job.chat_id, text=f"{job.data}")
+    # await context.bot.send_message(job.chat_id, text=f"{job.data}")
+
+async def set_intruder_alert(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Add a job to the queue."""
+    chat_id = update.effective_message.chat_id
+    try:
+        job_removed = remove_job_if_exists(str(chat_id), context)
+        context.job_queue.run_repeating(intruder_alert_callback, interval=1, chat_id=chat_id, name=str(chat_id), data=f"{test_controller.paisley()}")
+
+        text = "Intruder alert enabled!"
+        if job_removed:
+            text += " Previous one was removed."
+        await update.effective_message.reply_text(text)
+
+    except (IndexError, ValueError):
+        await update.effective_message.reply_text("Error: cannot set intruder alert")
+
+async def unset_intruder_alert(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Remove the job if the user changed their mind."""
+    chat_id = update.message.chat_id
+    job_removed = remove_job_if_exists(str(chat_id), context)
+    text = "Intruder alert disabled!" if job_removed else "You have no active intruder alert."
+    await update.message.reply_text(text)
 
 def main() -> None:
     """Start the bot."""
@@ -116,12 +146,14 @@ def main() -> None:
     application.add_handler(CommandHandler("automoisture", set_automoisture))
     application.add_handler(CommandHandler("stopautomoisture", unset_automoisture))
 
+    application.add_handler(CommandHandler("intruderalert", set_intruder_alert))
+    application.add_handler(CommandHandler('stopintruderalert', unset_intruder_alert))
+
     # on non command i.e message - echo the message on Telegram
     # application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
 
     # Run the bot until the user presses Ctrl-C
     application.run_polling(allowed_updates=Update.ALL_TYPES)
-
 
 if __name__ == "__main__":
     main()
