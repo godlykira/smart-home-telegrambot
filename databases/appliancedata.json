@@ -1,0 +1,6 @@
+{
+    "lights": 100,
+    "sensors": 150,
+    "machinery": 200,
+    "electronics": 50
+}
