@@ -13,7 +13,11 @@ To install all the requirement packages, run this command;
 ```powershell
 pip install -r requirements.txt
 ```
-After installation, run `main.py`
+After installation, create `.env` file and write
+```
+BOT_TOKEN= <bot-token>
+```
+Finally, run `main.py` using the following command;
 ```powershell
 python main.py
 ```
