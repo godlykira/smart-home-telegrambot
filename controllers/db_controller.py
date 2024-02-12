@@ -83,6 +83,20 @@ def remove_appliance(chat_id, appliance_index):
                 with open(file_path, 'w') as f:
                     json.dump(db_data, f, indent=2)
 
+def update_appliance_status(chat_id, appliance_index):
+    base_path = Path(__file__).parent
+    file_path = (base_path / "../databases/userdata.json").resolve()
+
+    with open(file_path, 'r') as f:
+        db_data = json.load(f)
+
+        for item in db_data:
+            if item['chat_id'] == chat_id:
+                item['appliances'][int(appliance_index) - 1]['status'] = True if item['appliances'][int(appliance_index) - 1]['status'] is False else False
+
+                with open(file_path, 'w') as f:
+                    json.dump(db_data, f, indent=2)
+
 def get_categories():
     """
     Retrieve categories from the appliancedata.json file and return a dictionary with categories and the full database data.
