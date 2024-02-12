@@ -120,3 +120,29 @@ def get_all_appliance(user_id):
         for item in db_data:
             if item['chat_id'] == user_id:
                 return item['appliances']
+
+def user_total_usage(user_id):
+    base_path = Path(__file__).parent
+    file_path1 = (base_path / "../databases/userdata.json").resolve()
+    file_path2 = (base_path / "../databases/appliancedata.json").resolve()
+
+    with open(file_path1, 'r') as f:
+        with open(file_path2, 'r') as f2:
+            db_data1 = json.load(f)
+            db_data2 = json.load(f2)
+
+            for item in db_data1:
+                if item['chat_id'] == user_id:
+                    total = 0
+                    for x in item['appliances']:
+                        total += db_data2[x['category']]
+                    return total
+                
+def get_current(category):
+    base_path = Path(__file__).parent
+    file_path = (base_path / "../databases/appliancedata.json").resolve()
+
+    with open(file_path, 'r') as f:
+        db_data = json.load(f)
+
+        return db_data[category]

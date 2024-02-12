@@ -3,6 +3,7 @@ from telegram import Update
 from telegram.ext import ContextTypes, ConversationHandler
 
 import controllers.db_controller as db_controller
+import controllers.test_controller as test_controller
 
 # Enable logging
 logging.basicConfig(
@@ -42,17 +43,26 @@ async def use_appliance(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
 
     if (update.message.text.isdigit()):
         if int(update.message.text) - 1 < len(db_controller.get_all_appliance(update.effective_message.chat_id)):
-            db_controller.update_appliance_status(update.effective_message.chat_id, update.message.text)
+            max_current = test_controller.total_current()
+            current = db_controller.get_current[db_controller.get_all_appliance(update.effective_message.chat_id)[int(update.message.text) - 1]['category']]
+            total_current = db_controller.user_total_usage(update.effective_message.chat_id)
 
-            user_appliance = db_controller.get_all_appliance(update.effective_message.chat_id)
-            appliance_name = ''
-            for x in user_appliance:
-                appliance_name += f"{user_appliance.index(x) + 1}. Name: {x['name']}\n    Category: {x['category']}\n    Status: {"ON" if x['status'] else 'OFF'}" + '\n'
-
-            await update.message.reply_text(
-                "Appliance status updated!\n\n"
-                f"{appliance_name}"
-            )
+            if total_current + current > max_current:
+                await update.message.reply_text(
+                    "Cannot use this appliance. The maximum current is reached."
+                )
+            else:
+                db_controller.update_appliance_status(update.effective_message.chat_id, update.message.text)
+    
+                user_appliance = db_controller.get_all_appliance(update.effective_message.chat_id)
+                appliance_name = ''
+                for x in user_appliance:
+                    appliance_name += f"{user_appliance.index(x) + 1}. Name: {x['name']}\n    Category: {x['category']}\n    Status: {"ON" if x['status'] else 'OFF'}" + '\n'
+    
+                await update.message.reply_text(
+                    "Appliance status updated!\n\n"
+                    f"{appliance_name}"
+                )
         else: 
             await update.message.reply_text(
                 "Appliance not found."
