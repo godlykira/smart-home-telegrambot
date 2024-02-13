@@ -27,7 +27,7 @@ async def start_use_appliance(update: Update, context: ContextTypes.DEFAULT_TYPE
 
     appliance_name = ''
     for x in user_appliance:
-        appliance_name += f"{user_appliance.index(x) + 1}. Name: {x['name']}\n    Category: {x['category']}\n    Status: {"ON" if x['status'] else 'OFF'}" + '\n'
+        appliance_name += f"{user_appliance.index(x) + 1}. Name: {x['name']}\n    Category: {x['category']}\n    Status: {"ON" if x['status'] else 'OFF'}" + '\n\n'
 
     await update.message.reply_text(
         "Which appliance do you want to turn on?"
@@ -44,8 +44,11 @@ async def use_appliance(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     if (update.message.text.isdigit()):
         if int(update.message.text) - 1 < len(db_controller.get_all_appliance(update.effective_message.chat_id)):
             max_current = test_controller.total_current()
-            current = db_controller.get_current[db_controller.get_all_appliance(update.effective_message.chat_id)[int(update.message.text) - 1]['category']]
+            category = db_controller.get_all_appliance(update.effective_message.chat_id)[int(update.message.text) - 1]['category']
+            current = db_controller.get_current(category)
             total_current = db_controller.user_total_usage(update.effective_message.chat_id)
+
+            print(max_current, category ,current, total_current)
 
             if total_current + current > max_current:
                 await update.message.reply_text(
@@ -57,7 +60,7 @@ async def use_appliance(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
                 user_appliance = db_controller.get_all_appliance(update.effective_message.chat_id)
                 appliance_name = ''
                 for x in user_appliance:
-                    appliance_name += f"{user_appliance.index(x) + 1}. Name: {x['name']}\n    Category: {x['category']}\n    Status: {"ON" if x['status'] else 'OFF'}" + '\n'
+                    appliance_name += f"{user_appliance.index(x) + 1}. Name: {x['name']}\n    Category: {x['category']}\n    Status: {"ON" if x['status'] else 'OFF'}" + '\n\n'
     
                 await update.message.reply_text(
                     "Appliance status updated!\n\n"

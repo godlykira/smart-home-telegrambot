@@ -52,8 +52,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     
 -- turn on/off appliances --
 
-/turnon - turn on appliance. Usage: /turnon <applianceId>
-/turnoff - turn off appliance. Usage: /turnoff <applianceId>
+/toggle - turn on/off appliance. Usage: /toggle <appliance_no>
     
 -- sensor control --
     
@@ -61,6 +60,9 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 /stopautomoisture - stop auto moisture updates.
     
 -- security control --
+
+/enablesecurity - enable security.
+/disablesecurity - disable security.
     
 /setpasswd - set new password.
 /setkeycard - set new keycard.
@@ -111,7 +113,7 @@ def main() -> None:
     application.add_handler(conv_removeAppliance)
 
     conv_useAppliance = ConversationHandler(
-        entry_points=[CommandHandler('useappliance', start_use_appliance)],
+        entry_points=[CommandHandler('toggle', start_use_appliance)],
         states={
             APPLIANCE_NAME_USE: [MessageHandler(filters.TEXT, use_appliance)],
         },

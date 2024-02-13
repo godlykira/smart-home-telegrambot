@@ -153,7 +153,9 @@ def user_total_usage(user_id):
                 if item['chat_id'] == user_id:
                     total = 0
                     for x in item['appliances']:
-                        total += db_data2[x['category']]
+                        if x['status'] is True:
+                            print(db_data2[x['category']], x['status'])
+                            total += db_data2[x['category']]
                     return total
                 
 def get_current(category):
