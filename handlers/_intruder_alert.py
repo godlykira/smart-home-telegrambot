@@ -34,7 +34,7 @@ async def set_intruder_alert(update: Update, context: ContextTypes.DEFAULT_TYPE)
     chat_id = update.effective_message.chat_id
     try:
         job_removed = remove_job_if_exists(str(chat_id), context)
-        context.job_queue.run_repeating(intruder_alert_callback, interval=1, chat_id=chat_id, name=str(chat_id), data=f"{test_controller.paisley()}")
+        context.job_queue.run_repeating(intruder_alert_callback, interval=1, chat_id=chat_id, name=str(chat_id), data=f"{test_controller.infrared()}")
 
         text = "Intruder alert enabled!"
         if job_removed:
