@@ -1,5 +1,7 @@
 # smart-home
 
+[![CodeQL](https://github.com/godlykira/smart-home-telegrambot/workflows/CodeQL/badge.svg)](https://github.com/godlykira/smart-home-telegrambot/actions?query=workflow%3ACodeQL)
+
 ## About
 
 ### Telegram Bot for Raspberry Pi Control
@@ -21,3 +23,7 @@ Finally, run `main.py` using the following command;
 ```powershell
 python main.py
 ```
+
+## Supported OS
+![Linux](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)
+![Windows 11](https://img.shields.io/badge/Windows%2011-%230079d5.svg?style=for-the-badge&logo=Windows%2011&logoColor=white)
