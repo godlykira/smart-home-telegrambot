@@ -110,12 +110,12 @@ def get_categories():
         only_categories = [[x for x in db_data.keys()]]
         return {'categories': only_categories, 'data': db_data}
 
-def get_all_appliance(user_id):
+def get_all_appliance(chat_id):
     """
     Retrieves all appliances associated with the given user ID from the database.
     
     Args:
-        user_id (str): The ID of the user to retrieve appliances for.
+        chat_id (str): The ID of the chat to retrieve appliances for.
     
     Returns:
         list: A list of appliances associated with the given user ID.
@@ -127,15 +127,15 @@ def get_all_appliance(user_id):
         db_data = json.load(f)
 
         for item in db_data:
-            if item['chat_id'] == user_id:
+            if item['chat_id'] == chat_id:
                 return item['appliances']
 
-def user_total_usage(user_id):
+def user_total_usage(chat_id):
     """
     Calculate the total usage of all appliances for a given user.
 
     Args:
-        user_id (int): The id of the user to calculate the total usage for.
+        chat_id (int): The id of the chat to calculate the total usage for.
 
     Returns:
         int: The total usage of all appliances for the given user.
@@ -150,7 +150,7 @@ def user_total_usage(user_id):
             db_data2 = json.load(f2)
 
             for item in db_data1:
-                if item['chat_id'] == user_id:
+                if item['chat_id'] == chat_id:
                     total = 0
                     for x in item['appliances']:
                         if x['status'] is True:
@@ -176,12 +176,12 @@ def get_current(category):
 
         return db_data[category]
 
-def add_passkey(user_id, passkey):
+def add_passkey(chat_id, passkey):
     """
     Updates the passkey for the specified user in the user data JSON file.
 
     Args:
-        user_id (int): The ID of the user for which the passkey is being updated.
+        chat_id (int): The ID of the user for which the passkey is being updated.
         passkey (str): The new passkey for the user.
 
     Returns:
@@ -194,8 +194,22 @@ def add_passkey(user_id, passkey):
         db_data = json.load(f)
 
         for item in db_data:
-            if item['chat_id'] == user_id:
+            if item['chat_id'] == chat_id:
                 item['password'] = passkey
+
+                with open(file_path, 'w') as f:
+                    json.dump(db_data, f, indent=2)
+
+def add_keycard(chat_id, keycard):
+    base_path = Path(__file__).parent
+    file_path = (base_path / "../databases/userdata.json").resolve()
+
+    with open(file_path, 'r') as f:
+        db_data = json.load(f)
+
+        for item in db_data:
+            if item['chat_id'] == chat_id:
+                item['card'] = keycard
 
                 with open(file_path, 'w') as f:
                     json.dump(db_data, f, indent=2)
