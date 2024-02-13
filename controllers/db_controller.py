@@ -111,6 +111,15 @@ def get_categories():
         return {'categories': only_categories, 'data': db_data}
 
 def get_all_appliance(user_id):
+    """
+    Retrieves all appliances associated with the given user ID from the database.
+    
+    Args:
+        user_id (str): The ID of the user to retrieve appliances for.
+    
+    Returns:
+        list: A list of appliances associated with the given user ID.
+    """
     base_path = Path(__file__).parent
     file_path = (base_path / "../databases/userdata.json").resolve()
 
@@ -122,6 +131,15 @@ def get_all_appliance(user_id):
                 return item['appliances']
 
 def user_total_usage(user_id):
+    """
+    Calculate the total usage of all appliances for a given user.
+
+    Args:
+        user_id (int): The id of the user to calculate the total usage for.
+
+    Returns:
+        int: The total usage of all appliances for the given user.
+    """
     base_path = Path(__file__).parent
     file_path1 = (base_path / "../databases/userdata.json").resolve()
     file_path2 = (base_path / "../databases/appliancedata.json").resolve()
@@ -139,6 +157,15 @@ def user_total_usage(user_id):
                     return total
                 
 def get_current(category):
+    """
+    Retrieves the data for the given category from the appliancedata.json file.
+
+    Args:
+        category: A string representing the category for which to retrieve the data.
+
+    Returns:
+        The data corresponding to the given category from the appliancedata.json file.
+    """
     base_path = Path(__file__).parent
     file_path = (base_path / "../databases/appliancedata.json").resolve()
 
@@ -148,6 +175,16 @@ def get_current(category):
         return db_data[category]
 
 def add_passkey(user_id, passkey):
+    """
+    Updates the passkey for the specified user in the user data JSON file.
+
+    Args:
+        user_id (int): The ID of the user for which the passkey is being updated.
+        passkey (str): The new passkey for the user.
+
+    Returns:
+        None
+    """
     base_path = Path(__file__).parent
     file_path = (base_path / "../databases/userdata.json").resolve()
 
