@@ -27,7 +27,7 @@ async def start_use_appliance(update: Update, context: ContextTypes.DEFAULT_TYPE
 
     appliance_name = ''
     for x in user_appliance:
-        appliance_name += f"{user_appliance.index(x) + 1}. Name: {x['name']}\n    Category: {x['category']}\n    Status: {"ON" if x['status'] else 'OFF'}" + '\n\n'
+        appliance_name += f"{user_appliance.index(x) + 1}. Name: {x['name']}\n    Category: {x['category']}\n    Status: {'ON' if x['status'] else 'OFF'} \n\n"
 
     await update.message.reply_text(
         "Which appliance do you want to turn on?"
