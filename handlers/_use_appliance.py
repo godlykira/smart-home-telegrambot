@@ -60,7 +60,7 @@ async def use_appliance(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
                 user_appliance = db_controller.get_all_appliance(update.effective_message.chat_id)
                 appliance_name = ''
                 for x in user_appliance:
-                    appliance_name += f"{user_appliance.index(x) + 1}. Name: {x['name']}\n    Category: {x['category']}\n    Status: {"ON" if x['status'] else 'OFF'}" + '\n\n'
+                    appliance_name += f"{user_appliance.index(x) + 1}. Name: {x['name']}\n    Category: {x['category']}\n    Status: {'ON' if x['status'] else 'OFF'} \n\n"
     
                 await update.message.reply_text(
                     "Appliance status updated!\n\n"
