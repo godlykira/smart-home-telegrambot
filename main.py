@@ -12,6 +12,7 @@ from handlers._add_appliance import get_categories, start_add_appliance, applian
 from handlers._rm_appliance import start_remove_appliance, remove_appliance, APPLIANCE_NAME_REMOVE
 from handlers._use_appliance import start_use_appliance, use_appliance, APPLIANCE_NAME_USE
 from handlers._add_passkey import start_add_password, add_password, PASSKEY
+from handlers._add_keycard import start_get_keycard
 
 load_dotenv()
 
@@ -129,6 +130,8 @@ def main() -> None:
         fallbacks=[],
     )
     application.add_handler(conv_addpasskey)
+
+    application.add_handler(CommandHandler('setkeycard', start_get_keycard))
 
     # on non command i.e message - echo the message on Telegram
     # application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
