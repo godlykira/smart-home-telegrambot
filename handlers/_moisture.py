@@ -32,7 +32,7 @@ async def set_automoisture(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     chat_id = update.effective_message.chat_id
     try:
         job_removed = remove_job_if_exists(str(chat_id), context)
-        context.job_queue.run_repeating(automoisture_callback, interval=3, chat_id=chat_id, name=str(chat_id), data=f"{test_controller.say_hello()}")
+        context.job_queue.run_repeating(automoisture_callback, interval=3, chat_id=chat_id, name=str(chat_id), data=f"{test_controller.get_moisture()}")
 
         text = "Auto moisture monitoring successfully started!"
         if job_removed:
