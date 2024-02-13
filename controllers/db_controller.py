@@ -146,3 +146,17 @@ def get_current(category):
         db_data = json.load(f)
 
         return db_data[category]
+
+def add_passkey(user_id, passkey):
+    base_path = Path(__file__).parent
+    file_path = (base_path / "../databases/userdata.json").resolve()
+
+    with open(file_path, 'r') as f:
+        db_data = json.load(f)
+
+        for item in db_data:
+            if item['chat_id'] == user_id:
+                item['password'] = passkey
+
+                with open(file_path, 'w') as f:
+                    json.dump(db_data, f, indent=2)
