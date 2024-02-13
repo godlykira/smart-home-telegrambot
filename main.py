@@ -11,6 +11,7 @@ from handlers._intruder_alert import set_intruder_alert, unset_intruder_alert
 from handlers._add_appliance import get_categories, start_add_appliance, appliance_category, appliance_name, cancel_add_appliance, APPLIANCE_CATEGORY, APPLIANCE_NAME
 from handlers._rm_appliance import start_remove_appliance, remove_appliance, APPLIANCE_NAME_REMOVE
 from handlers._use_appliance import start_use_appliance, use_appliance, APPLIANCE_NAME_USE
+from handlers._add_passkey import start_add_password, add_password, PASSKEY
 
 load_dotenv()
 
@@ -52,23 +53,19 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 -- turn on/off appliances --
 
 /turnon - turn on appliance. Usage: /turnon <applianceId>
-    
 /turnoff - turn off appliance. Usage: /turnoff <applianceId>
     
 -- sensor control --
     
 /automoisture - start auto moisture updates.
-    
 /stopautomoisture - stop auto moisture updates.
     
 -- security control --
     
 /setpasswd - set new password.
-    
 /setkeycard - set new keycard.
-    
+                                    
 /intruderalert - send intruder alert if detected.
-    
 /stopintruderalert - stop intruder alert.''')
 
 
@@ -121,6 +118,15 @@ def main() -> None:
         fallbacks=[],
     )
     application.add_handler(conv_useAppliance)
+
+    conv_addpasskey = ConversationHandler(
+        entry_points=[CommandHandler('setpasswd', start_add_password)],
+        states={
+            PASSKEY: [MessageHandler(filters.TEXT, add_password)],
+        },
+        fallbacks=[],
+    )
+    application.add_handler(conv_addpasskey)
 
     # on non command i.e message - echo the message on Telegram
     # application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
