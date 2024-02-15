@@ -2,16 +2,15 @@ import logging
 from telegram import Update
 from telegram.ext import ContextTypes, ConversationHandler
 
-import threading
-from queue import Queue
+# ##########################################################################
 
 import controllers.db_controller as db_controller
 import controllers.controller as controller
 
-# Multithreading to read the ADC values
-queue = Queue()
-thread = threading.Thread(target=controller.current, args=(queue,))
-thread.start()
+# ##########################################################################
+
+# Shared queue for communication between threads
+from shared.shared_variables import shared_queue_1
 
 # Enable logging
 logging.basicConfig(
@@ -70,7 +69,10 @@ async def use_appliance(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         if int(update.message.text) - 1 < len(
             db_controller.get_all_appliance(update.effective_message.chat_id)
         ):
-            max_current = queue.get() if not queue.empty() else 1023
+            max_current = (
+                shared_queue_1.get()["LDR"] if not shared_queue_1.empty() else 1023
+            )
+            print(max_current)
             category = db_controller.get_all_appliance(
                 update.effective_message.chat_id
             )[int(update.message.text) - 1]["category"]
@@ -86,7 +88,6 @@ async def use_appliance(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
                     "Cannot use this appliance. The maximum current is reached."
                 )
             else:
-                print("iN ELSE STATEMENT")
                 db_controller.update_appliance_status(
                     update.effective_message.chat_id, update.message.text
                 )

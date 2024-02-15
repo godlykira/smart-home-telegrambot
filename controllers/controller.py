@@ -2,6 +2,7 @@ import RPi.GPIO as GPIO
 import spidev  # import SPI library
 from mfrc522 import SimpleMFRC522
 
+from shared.shared_variables import shared_queue_1
 import time
 
 GPIO.setmode(GPIO.BCM)
@@ -21,9 +22,9 @@ def get_moisture():
         return "detected LOW i.e. no moisture"
 
 
-def current(queue):
+def current(thread_id, stop_event):
     """
-    A function to read the ADC values from SPI and return the values of LDR and potentiometer.
+    A function to read ADC values from MCP3008 using SPI and share the results through a shared queue.
     """
     spi = spidev.SpiDev()  # create SPI object
     spi.open(0, 0)  # open SPI port 0, device (CS) 0
@@ -43,16 +44,21 @@ def current(queue):
         # OR result with second byte, to get 10-bit ADC result
         return data
 
-    while True:
-        LDR_value = readadc(0)  # read ADC channel 0 i.e. LDR
-        # print("LDR = ", LDR_value) #print result
-        pot_value = readadc(1)  # read ADC channel 1 i.e. potentiometer
-        # print("pot = ", pot_value) #print result
+    while not stop_event.is_set():
+        try:
+            print("Current Running Thread ID: ", thread_id)
+            LDR_value = readadc(0)  # read ADC channel 0 i.e. LDR
+            # print("LDR = ", LDR_value) #print result
+            pot_value = readadc(1)  # read ADC channel 1 i.e. potentiometer
+            # print("pot = ", pot_value) #print result
 
-        result = {"LDR": LDR_value, "pot": pot_value}
-        queue.put(result)
+            result = {"LDR": LDR_value, "pot": pot_value}
+            shared_queue_1.put(result)
 
-        time.sleep(1)
+            time.sleep(1)
+        except KeyboardInterrupt:
+            stop_event.set()
+            break
 
 
 async def ultrasonic():

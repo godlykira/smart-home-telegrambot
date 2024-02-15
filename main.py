@@ -1,4 +1,5 @@
 import os
+import threading
 from dotenv import load_dotenv
 import logging
 from telegram import Update
@@ -11,7 +12,15 @@ from telegram.ext import (
     filters,
 )
 
+# ##########################################################################
+
 import controllers.db_controller as db_controller
+import controllers.controller as controller
+
+# ##########################################################################
+
+# Shared queue for communication between threads
+from shared.shared_variables import shutdown_event_threads
 
 from handlers._moisture import set_automoisture, unset_automoisture
 from handlers._intruder_alert import set_intruder_alert, unset_intruder_alert
@@ -107,7 +116,13 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
 
 def main() -> None:
-    """Start the bot."""
+    """
+    Create the Application and pass it your bot's token.
+    on different commands - answer in Telegram
+    Start the controller thread
+    Run the bot until the user presses Ctrl-C
+    Shutting down threads (the only way i can find)
+    """
     # Create the Application and pass it your bot's token.
     application = Application.builder().token(TOKEN).build()
 
@@ -163,13 +178,26 @@ def main() -> None:
     )
     application.add_handler(conv_addpasskey)
 
-    # application.add_handler(CommandHandler('setkeycard', start_get_keycard))
-
-    # on non command i.e message - echo the message on Telegram
-    # application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
+    # Start the controller thread
+    thread_1 = threading.Thread(
+        target=controller.current, args=(1, shutdown_event_threads)
+    )
+    thread_1.start()
 
     # Run the bot until the user presses Ctrl-C
     application.run_polling(allowed_updates=Update.ALL_TYPES)
+    inputStr = input("Press 'e' to exit.")
+
+    # Shutting down threads (the only way i can find)
+    if inputStr == "e":
+        print("Shutting down threads...")
+
+        shutdown_event_threads.set()
+        thread_1.join()
+
+        application.stop_running()
+        print("Bot shut down.")
+        exit()
 
 
 if __name__ == "__main__":

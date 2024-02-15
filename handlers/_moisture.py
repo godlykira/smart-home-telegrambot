@@ -26,8 +26,9 @@ def remove_job_if_exists(name: str, context: ContextTypes.DEFAULT_TYPE) -> bool:
 
 async def automoisture_callback(context: ContextTypes.DEFAULT_TYPE) -> None:
     """Send the alarm message."""
+    data = controller.get_moisture()
     job = context.job
-    await context.bot.send_message(job.chat_id, text=f"{job.data}")
+    await context.bot.send_message(job.chat_id, text=f"{data}")
 
 
 async def set_automoisture(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -40,7 +41,6 @@ async def set_automoisture(update: Update, context: ContextTypes.DEFAULT_TYPE) -
             interval=3,
             chat_id=chat_id,
             name=str(chat_id),
-            data=f"{controller.get_moisture()}",
         )
 
         text = "Auto moisture monitoring successfully started!"

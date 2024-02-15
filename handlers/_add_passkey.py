@@ -2,7 +2,11 @@ import logging
 from telegram import Update
 from telegram.ext import ContextTypes, ConversationHandler
 
+# ##########################################################################
+
 import controllers.db_controller as db_controller
+
+# ##########################################################################
 
 # Enable logging
 logging.basicConfig(
@@ -29,21 +33,24 @@ async def start_add_password(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
 async def add_password(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
-    Asynchronous function to add a password to the database.
+    Asynchronously adds a password from the update message to the database, and replies with a success or failure message.
 
     Args:
-        update (Update): The update object containing the message.
-        context (ContextTypes.DEFAULT_TYPE): The context object for the handler.
+        update (Update): The incoming update.
+        context (ContextTypes.DEFAULT_TYPE): The context of the incoming update.
 
     Returns:
-        ConversationHandler.END: Indicates the end of the conversation handler.
+        ConversationHandler.END: The end state of the conversation handler.
     """
     user = update.message.from_user
     logger.info("Passkey of %s: %s", user.first_name, update.message.text)
 
-    # save to db
-    db_controller.add_passkey(update.effective_message.chat_id, update.message.text)
+    if update.message.text.isdigit():
+        # save to db
+        db_controller.add_passkey(update.effective_message.chat_id, update.message.text)
 
-    await update.message.reply_text("Thanks! I will remember this.")
+        await update.message.reply_text("Thanks! I will remember this.")
+    else:
+        await update.message.reply_text("Keypass should be only number")
 
     return ConversationHandler.END

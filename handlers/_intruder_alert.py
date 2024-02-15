@@ -2,7 +2,11 @@ import logging
 from telegram import Update
 from telegram.ext import ContextTypes
 
+# ##########################################################################
+
 import controllers.controller as controller
+
+# ##########################################################################
 
 # Enable logging
 logging.basicConfig(
@@ -24,13 +28,13 @@ async def intruder_alert_callback(context: ContextTypes.DEFAULT_TYPE) -> None:
     Returns:
     - None
     """
-    chat_id = context.job.context["chat_id"]  # Extract the chat ID from the context
+    job = context.job  # Extract the chat ID from the context
     condition = (
         await controller.ultrasonic()
     )  # Check the ultrasonic sensor for presence
     if condition:  # If presence is detected
         await context.bot.send_message(
-            chat_id, text="Presence Detected"
+            job.chat_id, text="Presence Detected"
         )  # Send a message indicating presence
     # await context.bot.send_message(job.chat_id, text=f"{job.data}")  # Commented out line, not removed
 
