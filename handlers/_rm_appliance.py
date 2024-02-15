@@ -15,7 +15,20 @@ logger = logging.getLogger(__name__)
 
 APPLIANCE_NAME_REMOVE = range(1)
 
-async def start_remove_appliance(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+
+async def start_remove_appliance(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
+    """
+    Removes an appliance specified by the user, if any, from the user's list of appliances.
+
+    Args:
+        update (Update): The incoming update for this handler.
+        context (ContextTypes.DEFAULT_TYPE): The context for this handler.
+
+    Returns:
+        None
+    """
     user_appliance = db_controller.get_all_appliance(update.effective_message.chat_id)
 
     if len(user_appliance) == 0:
@@ -24,9 +37,9 @@ async def start_remove_appliance(update: Update, context: ContextTypes.DEFAULT_T
         )
         return ConversationHandler.END
 
-    appliance_name = ''
+    appliance_name = ""
     for x in user_appliance:
-        appliance_name += f'{user_appliance.index(x) + 1}. ' + x['name'] + '\n'
+        appliance_name += f"{user_appliance.index(x) + 1}. " + x["name"] + "\n"
 
     await update.message.reply_text(
         "Which appliance do you want to remove?"
@@ -36,28 +49,41 @@ async def start_remove_appliance(update: Update, context: ContextTypes.DEFAULT_T
 
     return APPLIANCE_NAME_REMOVE
 
-async def remove_appliance(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None: 
+
+async def remove_appliance(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """
+    Asynchronously removes an appliance from the chat's database based on the user input.
+
+    Args:
+    - update (Update): The incoming update from the user.
+    - context (ContextTypes.DEFAULT_TYPE): The context in which the update is being handled.
+
+    Returns:
+    - None
+    """
     user = update.message.from_user
     logger.info("User %s: %s", user.first_name, update.message.text)
 
-    if (update.message.text.isdigit()):
-        if int(update.message.text) - 1 < len(db_controller.get_all_appliance(update.effective_message.chat_id)):
-            db_controller.remove_appliance(update.effective_message.chat_id, update.message.text)
+    if update.message.text.isdigit():
+        if int(update.message.text) - 1 < len(
+            db_controller.get_all_appliance(update.effective_message.chat_id)
+        ):
+            db_controller.remove_appliance(
+                update.effective_message.chat_id, update.message.text
+            )
 
-            user_appliance = db_controller.get_all_appliance(update.effective_message.chat_id)
-            appliance_name = ''
+            user_appliance = db_controller.get_all_appliance(
+                update.effective_message.chat_id
+            )
+            appliance_name = ""
             for x in user_appliance:
-                appliance_name += f'{user_appliance.index(x) + 1}. ' + x['name'] + '\n'
+                appliance_name += f"{user_appliance.index(x) + 1}. " + x["name"] + "\n"
 
             await update.message.reply_text(
-                "Appliance removed!\n\n"
-                f"{appliance_name}"
+                "Appliance removed!\n\n" f"{appliance_name}"
             )
-        else: 
-            await update.message.reply_text(
-                "Appliance not found."
-            )
+        else:
+            await update.message.reply_text("Appliance not found.")
         # db_controller.remove_appliance(update.effective_message.chat_id, update.message.text)
 
     return ConversationHandler.END
-    

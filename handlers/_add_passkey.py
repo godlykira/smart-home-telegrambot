@@ -15,20 +15,35 @@ logger = logging.getLogger(__name__)
 
 PASSKEY = range(1)
 
+
 async def start_add_password(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """
+    Asynchronous function to start the process of adding a password.
+    Takes in an update object and a context object as parameters.
+    Returns an integer representing the passkey.
+    """
     await update.message.reply_text("Enter passkey:")
 
     return PASSKEY
 
+
 async def add_password(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """
+    Asynchronous function to add a password to the database.
+
+    Args:
+        update (Update): The update object containing the message.
+        context (ContextTypes.DEFAULT_TYPE): The context object for the handler.
+
+    Returns:
+        ConversationHandler.END: Indicates the end of the conversation handler.
+    """
     user = update.message.from_user
     logger.info("Passkey of %s: %s", user.first_name, update.message.text)
 
     # save to db
     db_controller.add_passkey(update.effective_message.chat_id, update.message.text)
 
-    await update.message.reply_text(
-        "Thanks! I will remember this."
-    )
+    await update.message.reply_text("Thanks! I will remember this.")
 
     return ConversationHandler.END

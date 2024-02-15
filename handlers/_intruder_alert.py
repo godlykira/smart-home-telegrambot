@@ -2,7 +2,7 @@ import logging
 from telegram import Update
 from telegram.ext import ContextTypes
 
-import controllers.test_controller as test_controller
+import controllers.controller as controller
 
 # Enable logging
 logging.basicConfig(
@@ -13,15 +13,38 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 
 logger = logging.getLogger(__name__)
 
+
 async def intruder_alert_callback(context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Send the alarm message."""
-    job = context.job
-    if job.data == "Object in way":
-        await context.bot.send_message(job.chat_id, text=f"{job.data}")
-    # await context.bot.send_message(job.chat_id, text=f"{job.data}")
-        
+    """
+    Send the alarm message if an intruder is detected.
+
+    Args:
+    - context: The context object containing information about the job and bot.
+
+    Returns:
+    - None
+    """
+    chat_id = context.job.context["chat_id"]  # Extract the chat ID from the context
+    condition = (
+        await controller.ultrasonic()
+    )  # Check the ultrasonic sensor for presence
+    if condition:  # If presence is detected
+        await context.bot.send_message(
+            chat_id, text="Presence Detected"
+        )  # Send a message indicating presence
+    # await context.bot.send_message(job.chat_id, text=f"{job.data}")  # Commented out line, not removed
+
+
 def remove_job_if_exists(name: str, context: ContextTypes.DEFAULT_TYPE) -> bool:
-    """Remove job with given name. Returns whether job was removed."""
+    """Remove job with the given name if it exists.
+
+    Args:
+    name (str): The name of the job to be removed.
+    context (ContextTypes.DEFAULT_TYPE): The context containing the job queue.
+
+    Returns:
+    bool: True if job was removed, False otherwise.
+    """
     current_jobs = context.job_queue.get_jobs_by_name(name)
     if not current_jobs:
         return False
@@ -29,24 +52,49 @@ def remove_job_if_exists(name: str, context: ContextTypes.DEFAULT_TYPE) -> bool:
         job.schedule_removal()
     return True
 
-async def set_intruder_alert(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Add a job to the queue."""
+
+async def set_intruder_alert(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
+    """Add a job to the queue to enable intruder alert."""
+    # Get the chat ID from the update
     chat_id = update.effective_message.chat_id
+
+    # Remove any existing job for the current chat ID
     try:
         job_removed = remove_job_if_exists(str(chat_id), context)
-        context.job_queue.run_repeating(intruder_alert_callback, interval=1, chat_id=chat_id, name=str(chat_id), data=f"{test_controller.infrared()}")
+        # Schedule a repeating job for the intruder alert callback
+        context.job_queue.run_repeating(
+            intruder_alert_callback, interval=1, chat_id=chat_id, name=str(chat_id)
+        )
 
         text = "Intruder alert enabled!"
         if job_removed:
             text += " Previous one was removed."
+        # Send a message to confirm that the intruder alert is enabled
         await update.effective_message.reply_text(text)
 
     except (IndexError, ValueError):
+        # Handle the exception if setting the intruder alert fails
         await update.effective_message.reply_text("Error: cannot set intruder alert")
 
-async def unset_intruder_alert(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Remove the job if the user changed their mind."""
-    chat_id = update.message.chat_id
-    job_removed = remove_job_if_exists(str(chat_id), context)
-    text = "Intruder alert disabled!" if job_removed else "You have no active intruder alert."
-    await update.message.reply_text(text)
+
+async def unset_intruder_alert(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
+    """Remove the intruder alert job if the user changed their mind.
+
+    Args:
+        update (telegram.Update): The incoming update from Telegram.
+        context (telegram.ext.CallbackContext): The context for the handler.
+    """
+    chat_id = update.message.chat_id  # Get the chat ID from the update
+    job_removed = remove_job_if_exists(
+        str(chat_id), context
+    )  # Remove the job if it exists
+    text = (
+        "Intruder alert disabled!"
+        if job_removed
+        else "You have no active intruder alert."
+    )
+    await update.message.reply_text(text)  # Send the appropriate message as a reply

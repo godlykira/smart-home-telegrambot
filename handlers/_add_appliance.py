@@ -15,44 +15,62 @@ logger = logging.getLogger(__name__)
 
 APPLIANCE_CATEGORY, APPLIANCE_NAME = range(2)
 
-def get_categories() -> int:
-    """
-    Function to retrieve categories from the database and generate a regex pattern.
-    Returns a dictionary containing the categories and the generated regex pattern.
-    """
-    categories = db_controller.get_categories()['categories']
-    regex = ''
-    for x in categories[0]:
-        regex += x + '|'
-    regex = regex[:-1]
 
-    return {
-        'categories': categories,
-        'regex': regex
-    }
+def get_categories() -> dict:
+    """
+    Retrieve categories from the database and generate a regex pattern.
 
-async def start_add_appliance(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    reply_keyboard = get_categories()['categories']
+    Returns:
+    dict: A dictionary containing the categories and the generated regex pattern.
+    """
+    # Retrieve categories from the database
+    categories = db_controller.get_categories()["categories"]
+
+    # Generate regex pattern
+    regex = "|".join(categories[0])
+
+    return {"categories": categories, "regex": regex}
+
+
+async def start_add_appliance(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> int:
+    """
+    Asynchronous function to start adding an appliance.
+
+    Args:
+        update (Update): The incoming update for this function.
+        context (ContextTypes.DEFAULT_TYPE): The context for this function.
+
+    Returns:
+        int: The appliance category code.
+    """
+    reply_keyboard = get_categories()["categories"]
 
     await update.message.reply_text(
         "Hi! I'm Smart Home. I can help you add appliances. "
         "Send /cancel to stop talking to me.\n\n"
         "Select your appliance category:",
         reply_markup=ReplyKeyboardMarkup(
-            reply_keyboard, one_time_keyboard=True, input_field_placeholder="appliance category"
+            reply_keyboard,
+            one_time_keyboard=True,
+            input_field_placeholder="appliance category",
         ),
     )
 
     return APPLIANCE_CATEGORY
 
+
 async def appliance_category(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Stores the selected gender and asks for a photo."""
+    """Stores the selected appliance category and prompts the user to provide a name for the appliance."""
     user = update.message.from_user
+    # Log the appliance category selected by the user
     logger.info("Appliance category of %s: %s", user.first_name, update.message.text)
 
-    # add to temp
+    # Add the selected appliance category to temporary storage
     db_controller.add_to_temp(update.effective_message.chat_id, update.message.text)
 
+    # Prompt the user to provide a name for the appliance
     await update.message.reply_text(
         "so I know what your appliance is. Now give a name to your appliance: ",
         reply_markup=ReplyKeyboardRemove(),
@@ -60,8 +78,13 @@ async def appliance_category(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
     return APPLIANCE_NAME
 
+
 async def appliance_name(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Stores the photo and asks for a location."""
+    """
+    An asynchronous function that handles the appliance name.
+    It takes an 'update' of type 'Update' and a 'context' of type 'ContextTypes.DEFAULT_TYPE' as parameters.
+    It returns an integer.
+    """
     user = update.message.from_user
     logger.info("Appliance name of %s: %s", user.first_name, update.message.text)
 
@@ -71,13 +94,14 @@ async def appliance_name(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     # save to db
     db_controller.add_appliance(update.effective_message.chat_id)
 
-    await update.message.reply_text(
-        "Thanks! I will remember this."
-    )
+    await update.message.reply_text("Thanks! I will remember this.")
 
     return ConversationHandler.END
 
-async def cancel_add_appliance(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+
+async def cancel_add_appliance(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> int:
     """Cancels and ends the conversation."""
     user = update.message.from_user
     logger.info("User %s canceled the add appliance", user.first_name)

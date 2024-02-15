@@ -2,8 +2,16 @@ import logging
 from telegram import Update
 from telegram.ext import ContextTypes, ConversationHandler
 
+import threading
+from queue import Queue
+
 import controllers.db_controller as db_controller
-import controllers.test_controller as test_controller
+import controllers.controller as controller
+
+# Multithreading to read the ADC values
+queue = Queue()
+thread = threading.Thread(target=controller.current, args=(queue,))
+thread.start()
 
 # Enable logging
 logging.basicConfig(
@@ -16,7 +24,20 @@ logger = logging.getLogger(__name__)
 
 APPLIANCE_NAME_USE = range(1)
 
-async def start_use_appliance(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+
+async def start_use_appliance(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
+    """
+    Asynchronous function to start using an appliance.
+
+    Args:
+        update (Update): The incoming update for the handler.
+        context (ContextTypes.DEFAULT_TYPE): The context for the handler.
+
+    Returns:
+        None
+    """
     user_appliance = db_controller.get_all_appliance(update.effective_message.chat_id)
 
     if len(user_appliance) == 0:
@@ -25,7 +46,7 @@ async def start_use_appliance(update: Update, context: ContextTypes.DEFAULT_TYPE
         )
         return ConversationHandler.END
 
-    appliance_name = ''
+    appliance_name = ""
     for x in user_appliance:
         appliance_name += f"{user_appliance.index(x) + 1}. Name: {x['name']}\n    Category: {x['category']}\n    Status: {'ON' if x['status'] else 'OFF'} \n\n"
 
@@ -37,39 +58,55 @@ async def start_use_appliance(update: Update, context: ContextTypes.DEFAULT_TYPE
 
     return APPLIANCE_NAME_USE
 
-async def use_appliance(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None: 
+
+async def use_appliance(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """
+    An asynchronous function to use an appliance, taking an update and context as parameters and returning None.
+    """
     user = update.message.from_user
     logger.info("User %s: %s", user.first_name, update.message.text)
 
-    if (update.message.text.isdigit()):
-        if int(update.message.text) - 1 < len(db_controller.get_all_appliance(update.effective_message.chat_id)):
-            max_current = test_controller.total_current()
-            category = db_controller.get_all_appliance(update.effective_message.chat_id)[int(update.message.text) - 1]['category']
+    if update.message.text.isdigit():
+        if int(update.message.text) - 1 < len(
+            db_controller.get_all_appliance(update.effective_message.chat_id)
+        ):
+            max_current = queue.get() if not queue.empty() else 1023
+            category = db_controller.get_all_appliance(
+                update.effective_message.chat_id
+            )[int(update.message.text) - 1]["category"]
             current = db_controller.get_current(category)
-            total_current = db_controller.user_total_usage(update.effective_message.chat_id)
+            total_current = db_controller.user_total_usage(
+                update.effective_message.chat_id
+            )
 
-            print(max_current, category ,current, total_current)
+            # print(max_current, category ,current, total_current)
 
             if total_current + current > max_current:
                 await update.message.reply_text(
                     "Cannot use this appliance. The maximum current is reached."
                 )
             else:
-                db_controller.update_appliance_status(update.effective_message.chat_id, update.message.text)
-    
-                user_appliance = db_controller.get_all_appliance(update.effective_message.chat_id)
-                appliance_name = ''
+                print("iN ELSE STATEMENT")
+                db_controller.update_appliance_status(
+                    update.effective_message.chat_id, update.message.text
+                )
+
+                user_appliance = db_controller.get_all_appliance(
+                    update.effective_message.chat_id
+                )
+                appliance_name = ""
                 for x in user_appliance:
                     appliance_name += f"{user_appliance.index(x) + 1}. Name: {x['name']}\n    Category: {x['category']}\n    Status: {'ON' if x['status'] else 'OFF'} \n\n"
-    
+
+                for x in user_appliance:
+                    if x["category"] == "lights":
+                        print("status", x["status"])
+                        controller.light(x["status"])
+
                 await update.message.reply_text(
-                    "Appliance status updated!\n\n"
-                    f"{appliance_name}"
+                    "Appliance status updated!\n\n" f"{appliance_name}"
                 )
-        else: 
-            await update.message.reply_text(
-                "Appliance not found."
-            )
+        else:
+            await update.message.reply_text("Appliance not found.")
 
     return ConversationHandler.END
-    
