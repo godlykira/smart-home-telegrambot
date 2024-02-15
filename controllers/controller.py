@@ -85,7 +85,6 @@ async def ultrasonic():
     else:
         condition = False
         print(condition)
-        print("2")
         return condition
 
 
