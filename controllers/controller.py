@@ -28,6 +28,7 @@ def current(thread_id, stop_event):
     """
     spi = spidev.SpiDev()  # create SPI object
     spi.open(0, 0)  # open SPI port 0, device (CS) 0
+    print("Current Running Thread ID: ", thread_id)
 
     def readadc(adcnum):
         # read SPI data from the MCP3008, 8 channels in total
@@ -46,14 +47,17 @@ def current(thread_id, stop_event):
 
     while not stop_event.is_set():
         try:
-            print("Current Running Thread ID: ", thread_id)
+            while not shared_queue_1.empty():
+                # Dequeue and discard items until the queue is empty
+                shared_queue_1.get()
+
             LDR_value = readadc(0)  # read ADC channel 0 i.e. LDR
             # print("LDR = ", LDR_value) #print result
             pot_value = readadc(1)  # read ADC channel 1 i.e. potentiometer
             # print("pot = ", pot_value) #print result
 
             result = {"LDR": LDR_value, "pot": pot_value}
-            shared_queue_1.put(result)
+            shared_queue_1.put_nowait(result)
 
             time.sleep(1)
         except KeyboardInterrupt:
@@ -92,13 +96,6 @@ async def ultrasonic():
         condition = False
         print(condition)
         return condition
-
-
-async def register_card():
-    reader = SimpleMFRC522()
-    id = reader.read_id()
-    print("id", id)
-    return id
 
 
 def light(state):

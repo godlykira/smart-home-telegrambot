@@ -80,9 +80,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Send a message when the command /help is issued."""
     await update.message.reply_text(
-        """/list - list all appliances
-                                    
-/addappliance - add new appliance.
+        """/addappliance - add new appliance.
 /removeappliance - remove appliance.
     
 -- turn on/off appliances --
@@ -95,12 +93,8 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 /stopautomoisture - stop auto moisture updates.
     
 -- security control --
-
-/enablesecurity - enable security.
-/disablesecurity - disable security.
     
 /setpasswd - set new password.
-/setkeycard - set new keycard.
                                     
 /intruderalert - send intruder alert if detected.
 /stopintruderalert - stop intruder alert."""
@@ -177,6 +171,8 @@ def main() -> None:
         fallbacks=[],
     )
     application.add_handler(conv_addpasskey)
+
+    # application.add_handler(MessageHandler("setkeycard", start_get_keycard))
 
     # Start the controller thread
     thread_1 = threading.Thread(

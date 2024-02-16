@@ -45,12 +45,14 @@ async def add_password(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.message.from_user
     logger.info("Passkey of %s: %s", user.first_name, update.message.text)
 
-    if update.message.text.isdigit():
+    if update.message.text.isdigit() and len(update.message.text) == 8:
         # save to db
         db_controller.add_passkey(update.effective_message.chat_id, update.message.text)
 
         await update.message.reply_text("Thanks! I will remember this.")
     else:
-        await update.message.reply_text("Keypass should be only number")
+        await update.message.reply_text(
+            "Keypass should be only number and must be 8 digits."
+        )
 
     return ConversationHandler.END
