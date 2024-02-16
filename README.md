@@ -12,15 +12,22 @@ This Python project showcases a Telegram bot designed to control Raspberry Pi ha
 
 To install all the requirement packages, run this command;
 
-```powershell
+```bash
 pip install -r requirements.txt
 ```
-After installation, create `.env` file and write
+or
+
+```bash
+pip install python-telegram-bot
+pip install "python-telegram-bot[job-queue]"
 ```
-BOT_TOKEN= <bot-token>
+
+After installation, create `.env` file and write
+```txt
+BOT_TOKEN=<bot-token>
 ```
 Finally, run `main.py` using the following command;
-```powershell
+```bash
 python main.py
 ```
 
